@@ -265,6 +265,8 @@ body:not(.bright) .btn-primary .sa, body:not(.bright) #next-btn .sa, body:not(.b
 </style>
 </head>
 <body>
+<script>/* kula: LMS embed events. "completed" fires once, when the learner reaches the closing screen. "advance" fires from the final button. */
+(function(){var sentCompleted=false;window.kulaEmbed=function(ev){if(ev==="completed"){if(sentCompleted)return;sentCompleted=true;}try{window.parent.postMessage({type:"lms-embed-event",version:"1.0",payload:{event:ev}},"*");}catch(e){}};})();</script>
 <div class="container">
   <div class="top-bar hidden" id="top-bar">
     <div class="top-meta"><span id="lesson-tag">Kula Revise &middot; Grade 12 History &middot; Black Consciousness</span><span class="top-count" id="step-count"></span></div>
@@ -293,7 +295,7 @@ const RESULTS = {
   "eyebrow": "Lesson 4 report",
   "title": "Where You Stand",
   "bands": {
-    "excellent": "You have the chain from the circular to the bannings, and what came after it. Go to Lesson 5.",
+    "excellent": "You have the chain from the circular to the bannings, and what came after it. Continue to Lesson 5.",
     "strong": "Nearly all of it. What came after 1977 is the part most people skip, so go back over it.",
     "solid": "The uprising is secure and the aftermath is patchy. The figures and the 1977 bannings are worth another look.",
     "patchy": "Worth another pass before Lesson 5, which draws on all four lessons at once.",
@@ -629,7 +631,7 @@ const FLOW = [
     "explanation": "{opt0} shows the psychological and the political working as one process rather than as two separate topics. {opt1} is an accurate chain of events with the causation stripped out. {opt2} contradicts everything in Lesson 3.",
     "level": "Argue",
     "build": true,
-    "part": "In the schools everything the movement had built came together: young people taught to refuse inferiority refused Afrikaans and then the whole system, and the state answered by banning seventeen organisations and killing Steve Biko in detention."
+    "part": ""
   },
   {"type": "content", "tag": "", "html": "<div class=\"essaynote\"><div class=\"essaynote-label\">For an essay</div><h2>Remember this</h2><p>In 1976 school students in Soweto took the movement's ideas onto the streets, and the state banned seventeen organisations in 1977. You can read that as proof the movement was really political, or as the state's own judgement rather than its aim.</p><p>Weighing those two readings is the counter-argument in your essay. It is one of the points you will use when you build an essay.</p></div>"}
 ];
@@ -931,18 +933,7 @@ function renderSort(item){
 }
 
 // ============ RUNNING SUMMARY (own screen) ============
-function renderRunsum(item){
-  const parts = buildIds.filter(i=>i<=state.idx && state.revealed[i]).map(i=>FLOW[i].part);
-  const freshIdx = parts.length-1;
-  const lis = parts.map((p,i)=>`<li class="${i===freshIdx?"fresh":""}">${esc(p)}</li>`).join("");
-  stage.innerHTML = `
-    <div class="card">
-      <div class="stage-tag">${esc(item.tag||"Your running summary")}</div>
-      ${item.heading?`<h2>${esc(item.heading)}</h2>`:""}
-      ${item.html?item.html:""}
-      <div class="runsum"><div class="runsum-label">Your running summary</div><ol>${lis}</ol></div>
-    </div>`;
-}
+function renderRunsum(){ return; }
 
 // ============ POPUP after a build question ============
 function showBuildPop(part){ /* running-argument popup removed for essay-free standard */ return; }
@@ -1026,6 +1017,7 @@ function bindToggles(){
 
 // ============ RESULTS ============
 function showResults(){
+  kulaEmbed("completed");
   topBar.classList.add("hidden");
   nav.classList.add("hidden");
   let correct=0;
@@ -1062,19 +1054,13 @@ function showResults(){
     ${runsum}
     <div class="results-actions">
       <button class="btn-secondary" id="restart-btn">Restart lesson</button>
-      <button class="btn-primary" id="finish-btn">Finish</button>
+      <button class="btn-primary" id="finish-btn">Continue to Lesson 5&nbsp;&rarr;</button>
     </div>`;
   document.getElementById("restart-btn").addEventListener("click",()=>{
     state.idx=-1; state.answers={}; state.revealed={}; state.order={}; state.carRead={}; state.interState={}; state.poppedBuild={};
     renderCover();
   });
-  document.getElementById("finish-btn").addEventListener("click",()=>{
-    const back=document.createElement("div");
-    back.className="pop-back";
-    back.innerHTML=`<div class="pop"><div class="pop-label">Lesson complete</div><div class="pop-text">Tap Done to continue to Lesson 5, Build the Skeleton.</div><button class="pop-btn" id="fin-ok">Done</button></div>`;
-    document.body.appendChild(back);
-    document.getElementById("fin-ok").addEventListener("click",()=>back.remove());
-  });
+  document.getElementById("finish-btn").onclick=()=>kulaEmbed("advance");
 }
 
 function isRight(i){
